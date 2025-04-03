@@ -1,0 +1,19 @@
+services:
+  web:
+    image: wordpress
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db-wordpress.c1oigkqq4mak.us-east-1.rds.amazonaws.com
+      WORDPRESS_DB_USER: beatriz
+      WORDPRESS_DB_PASSWORD: 610235r3c4
+      WORDPRESS_DB_NAME: db_wordpress
+    volumes:
+      - /wordpress:/var/www/html
+    networks:
+      - tunel
+
+networks:
+  tunel:
+    driver: bridge
