@@ -69,7 +69,7 @@ Primeiro, criamos um **grupo de segurança** para o servidor web, onde a aplica�
 6. Clique em **Criar grupo de segurança**.  
 📌 *Isso garante que o tráfego seja configurado de maneira controlada posteriormente.*
 
-### 3.2Criar o Grupo de Segurança para o RDS (MySQL)  
+### 3.1 Criar o Grupo de Segurança para o RDS (MySQL)  
 O banco de dados MySQL no Amazon RDS precisa de um grupo de segurança para permitir a comunicação apenas com o servidor web.  
 
 ### Configuração:  
@@ -87,7 +87,7 @@ O banco de dados MySQL no Amazon RDS precisa de um grupo de segurança para perm
 ![infra](Images/Grupo%20rds%201.png) 
 ---
 
-## 5. Criar o Grupo de Segurança para o EFS  
+## 3.2 Criar o Grupo de Segurança para o EFS  
 O **Amazon EFS** armazenará arquivos compartilhados do WordPress, precisando de um grupo de segurança configurado corretamente.  
 
 ### Configuração:  
@@ -105,7 +105,7 @@ O **Amazon EFS** armazenará arquivos compartilhados do WordPress, precisando de
 
 ---
 
-## 6. Criar o Grupo de Segurança para o CLB (Classic Load Balancer)  
+## 3.3 Criar o Grupo de Segurança para o CLB (Classic Load Balancer)  
 O **Load Balancer** precisa permitir acesso externo e encaminhar as requisições ao WebServer.  
 
 ### Configuração:  
@@ -125,7 +125,7 @@ O **Load Balancer** precisa permitir acesso externo e encaminhar as requisiçõe
 
 ---
 
-## 7. Editar o Grupo de Segurança do WebServer  
+## 3.4 Editar o Grupo de Segurança do WebServer  
 Agora, configuramos o grupo de segurança do servidor web para permitir a comunicação com os demais serviços.  
 
 ### Configuração:  
@@ -161,4 +161,83 @@ Agora, configuramos o grupo de segurança do servidor web para permitir a comuni
 
 ### 📌 Observação  
 Essas configurações garantem que cada serviço tenha acesso apenas ao necessário, melhorando a segurança da infraestrutura.  
+
+## 3.5 Criar o Amazon EFS  
+
+Agora, vamos configurar o **Elastic File System (EFS)** para armazenar os arquivos compartilhados do WordPress.  
+
+### Passos:  
+1. Acesse o serviço **EFS** na AWS.  
+2. Clique para criar um novo **sistema de arquivos**.  
+3. Avance para a próxima aba.  
+4. Dê um nome ao seu EFS, selecione a VPC e clique em personalizar.  
+
+ ![infra](Images/efs.png) 
+ ![infra](Images/efs%201.png)
+ ![infra](Images/efs%202.png)
+ - Role para baixo e clique em próximo para ir para a próxima etapa
+
+![infra](Images/efs%203.png)
+- Nesta etapa 2 você vai selecionar as zonas de disponibilidade A e B, certificar que o ID da sub-rede das suas estejam privadas e colocar o grupo de segurança do EFS que criamos anteriormente. Passe pela etapa 3, vá para etapa 4 revise e clique em criar.
+
+ ![infra](Images/efs%204.png) 
+---
+
+🔹 **Nota:** O EFS permite que várias instâncias acessem os mesmos arquivos simultaneamente, garantindo escalabilidade e redundância.  
+
+# 4. Criar o Amazon RDS (MySQL)
+
+Nesta etapa, vamos configurar o serviço de banco de dados da AWS que será utilizado pela nossa aplicação WordPress.
+
+### Passos:
+
+1. Acesse o serviço **RDS** no painel da AWS.
+2. Clique em **Criar banco de dados**.
+3. Em tipo de criação, escolha **Padrão**.
+4. Em mecanismo do banco de dados, selecione **MySQL**.
+
+![infra](Images/rds.png) 
+
+5. Escolha a **versão mais recente** disponível.
+6. Em camada gratuita, selecione a opção **Elegível ao nível gratuito**.
+![infra](Images/rds%201.png)
+### Configurações principais: Guarde essas informações.
+- **Nome de usuário principal:** defina um nome fácil de lembrar.  
+- **Senha do banco:** crie uma senha segura e **anote essas informações** — elas serão usadas mais adiante.
+![infra](Images/rds%202.png)
+
+
+- **Classe da instância:** selecione `db.t3.micro` (inclusa no nível gratuito).
+![infra](Images/rds%203.png)
+- **Armazenamento:** marque a opção **Habilitar armazenamento escalável automaticamente**.
+![infra](Images/rds%204.png)
+- **Limite máximo de armazenamento:** defina conforme necessário (ex: 25 GiB).
+
+### Rede:
+- Certifique-se de que o banco está na **VPC correta**.
+- Na seção de **conectividade**, selecione o **grupo de segurança do RDS** que você criou anteriormente.
+
+![infra](Images/rds%205.png)
+
+- Em acesso público deixe a opçãp "Não" selecionada, em "Grupo de segurança de VPC" marque a opçãp "Selecionar existente" e marque o grupo de RDS criado anteriormente.
+![infra](Images/rds%206.png)
+
+### Banco de dados inicial:
+Antes de finalizar a criação:
+- Dê um nome ao banco de dados inicial (por exemplo: `db_wordpress`).  
+- Anote esse nome, pois será necessário na configuração do WordPress.
+- Desmarque a opção o "Backup"
+![infra](Images/rds%207.png)
+
+- Role para baixo e crie o banco de dados.
+
+---
+
+🚨 **Atenção:**  
+A criação do RDS pode **demorar alguns minutos**. Você pode acompanhar o status na seção "Bancos de dados" do RDS.
+
+![infra](Images/rds%208.png)
+
+
+
  
