@@ -11,9 +11,4 @@ services:
       WORDPRESS_DB_NAME: db_my_wordpress
     volumes:
       - /wordpress:/var/www/html
-    networks:
-      - tunel
 
-networks:
-  tunel:
-    driver: bridge
