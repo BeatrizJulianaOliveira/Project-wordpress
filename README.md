@@ -76,31 +76,111 @@ Este projeto tem como objetivo configurar um servidor **WordPress** utilizando *
 
 ### 8️⃣ Criar o **EFS**
 
-- Navegue pelas abas e selecione o **Security Group** criado anteriormente
+- Pela barra de pesquisa, selecione **EFS**
 
-📸 *[inserir imagem]*
-#### Aperte para ir para próxima aba
+![efs](images/efs%20.png)
+- Adicione o nome do seu EFS
+![efs 1](images/efs%201.png)
+![efs 2](images/efs%202.png)
+![efs 3](images/efs%203.png)
+#### - Aperte para ir para próxima aba
+#### - Selecionar o grupo de segurança do EFS criado anteriormente
+![efs 4](images/efs%204.png)
+### 9️⃣ Criar o RDS.
+![rds](images/rds.png)
+- Escolher a ultima versão disponível
+![rds](images/rds%201.png)
+- Escolher o nivel gratuito
+![rds](images/rds%202.png)
+- Guarde as informações de credenciais:
+![rds](images/rds%203.png)
+- Mudar para t3 micro:
+![rds](images/rds%204.png)
+- Alterar o limite maximo de armazenamento escalonavel:
+![rds](images/rds%205.png)
+- Verificar se está na VPC correta:
+![rds](images/rds%206.png)
+- Selecionar o grupo de segurança do RDS
+![rds](images/rds%207.png)
+- Antes de finalizar a criação RDS, definir um nome pro banco de dados inicial e guardar essa informação
+![rds](images/rds%208.png)
+![rds](images/rds%209.png)
 
-#### Selecionar o grupo de segurança do EFS criado anteriormente
-### Criar o RDS.
-Escolher a ultima versão disponível
-Escolher o nivel gratuito
-Guardar essas informações:
-Mudar para t3 micro:
-Alterar o limite maximo de armazenamento escalonavel:
-Verificar se está na VPC correta:
-Selecionar o grupo de segurança do RDS
-Antes de finalizar a criação RDS, definir um nome pro banco de dados inicial e guardar essa informação
-Pegar e armazenar o endereço do banco de dados && o ponto de montagem EFS.
-RDS
-EFS
+- Pegar e armazenar o endereço do banco de dados && o ponto de montagem EFS.
+- RDS
+![rds](images/rds%2010.png)
+- EFS
+![rds](images/rds%2011.png)
+![rds](images/rds%2012.png)
+
 Alterar esse userdata && o docker-compose.yml para que contenha suas informações
-Criar um Modelo de Execução (Lauch Template)
-Escolher o linux aws (o userdata que criei só funciona nele)
-Não escolha uma sub-rede especifica e escolha o grupo de segurança criado para os servidores web
-Colocar as Tags que a patricia passou nas tags de recurso, nos detalhes avançados colocar o arquivo no user-data (observação: terá que trocar o ponto de montagem pelo que está no seu EFS)
-Clique em criar um loadbalancer
+- User-data
+
+```bash
+#!/bin/bash
+
+sudo yum update -y
+sudo yum install -y docker wget amazon-efs-utils
+
+sudo service docker start
+sudo systemctl enable docker.service
+sudo usermod -aG docker ec2-user
+
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+sudo mkdir -p /wordpress
+sudo mount -t efs -o tls fs-08887fa7af31be953:/ /wordpress
+
+wget -O /home/ec2-user/docker-compose.yml https://raw.githubusercontent.com/BeatrizJulianaOliveira/Project-wordpress/refs/heads/main/Docker-compose.yml
+sudo chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
+
+cd /home/ec2-user
+sudo docker-compose up -d
+```
+- docker-compose.yml
+```bash
+services:
+  web:
+    image: wordpress
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db-my-wordpress.c1oigkqq4mak.us-east-1.rds.amazonaws.com
+      WORDPRESS_DB_USER: seu-usuario
+      WORDPRESS_DB_PASSWORD: sua-senha
+      WORDPRESS_DB_NAME: db_my_wordpress
+    volumes:
+      - /wordpress:/var/www/html
+    networks:
+      - tunel
+
+networks:
+  tunel:
+    driver: bridge
+```
+
+- Criar um Modelo de Execução (Lauch Template)
+![template](images/template.png)
+
+- Em Imagens de aplicação, escolher o linux aws (o userdata só funciona para nele)
+![template](images/template%201.png)
+- Role para baixo, em tipos de instâncias escolha a **t2.micro** do nível gratuito. Em pares de chaves, selecione alguma que você tenha.
+![rds](images/template%202.png)
+
+- Em configurações de rede, não escolha uma sub-rede especifica e escolha o grupo de segurança criado para os servidores web
+![rds](images/template%203.png)
+
+- Role para baixo, em Tags de recurso coloquei as que foram determinadas pelo programa de bolsas.  Mais abaixo, em detalhes avançados cole o arquivo no user-data (observação: terá que trocar o ponto de montagem pelo que está no seu EFS).
+![rds](images/template%204.png)
+- Crie o modelo de execução.
+
+![template](images/template%205.png)
+- Clique em Auto Scaling e vamos criá-lo.
+![asg](images/asg.png)
 Selecione o ALB
+![asg](images/asg%201.png)
 Coloque um nome nele e escolha as subnets que serão responsaveis pelo servidor web
 
 ### 9.Criar o ASG com o ALB 
