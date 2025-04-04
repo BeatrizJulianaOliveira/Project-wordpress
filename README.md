@@ -442,16 +442,63 @@ Agora que todos os serviços foram configurados corretamente, é hora de testar 
 
 ### Acessar o site via navegador:
 
-1. Acesse o serviço **EC2** > **Load Balancers**.
-2. Localize o **Classic Load Balancer** (CLB) que foi criado.
-3. Copie o **DNS Name** (ex: `my-clb-123456.us-east-1.elb.amazonaws.com`).
-4. Cole esse endereço no seu navegador.
+- Acesse o serviço **EC2** > **Load Balancers**.
+- Localize o **Classic Load Balancer** (CLB) que foi criado.
+- Copie o **DNS Name** (ex: `my-clb-123456.us-east-1.elb.amazonaws.com`).
+- Cole esse endereço no seu navegador.
 
 ![infra](Images/LB.png)
 
 Se tudo estiver correto, a aplicação **WordPress** (ou a página do seu projeto) será carregada
 
 ![alt text](Images/wordpress.png)
+
+## 11. Monitoramento e Manutenção com o CloudWatch 📊
+
+Após configurar toda a infraestrutura, é essencial implementar um sistema de **monitoramento e escalabilidade automática** para garantir o desempenho da aplicação em diferentes cenários de uso. Utilizaremos o **Amazon CloudWatch** para isso.
+
+ - Criar uma Política de Escalabilidade no Auto Scaling Group (ASG)🔁
+-  Acesse o **ASG (Auto Scaling Group)** criado anteriormente.
+- Vá até a seção **"Escalabilidade automática"** e clique em **"Criar política"**.
+
+![alt text](Images/cloud.png)
+
+- Selecione a opção de **escalabilidade simples**.
+- Dê um nome à política.
+
+![alt text](Images/cloud%201.png)
+
+- Vá até o **Amazon CloudWatch > Alarmes** e clique em **"Criar alarme"**.
+- Clique em **"Selecionar Métrica"**.
+- Navegue até: `EC2 > By Auto Scaling Group > CPUUtilization`.
+- **Quando a utilização da CPU ultrapassar 70%**, o ASG **deverá iniciar mais 1 instâncias**.
+
+![alt text](Images/cloud%202.png)
+
+![alt text](Images/cloud%203.png)
+
+- Configurar Escalabilidade com o CloudWatch
+- Salve a política.
+---
+
+## 12.Teste com o CloudShell
+
+Para testar se a política de escalabilidade está funcionando corretamente, podemos simular um estado de alarme usando o **CloudShell**:
+
+### 🧪 Simular o Alarme Manualmente
+
+1. Acesse o **CloudShell** no console da AWS.
+2. Execute o seguinte comando (substitua pelo nome real do alarme):
+
+```bash
+aws cloudwatch set-alarm-state \
+  --alarm-name "cpu-usage-high" \
+  --state-value ALARM \
+  --state-reason "Simulação de teste de escalabilidade"
+```
+![alt text](Images/cloud%204.png)
+
+
 
 # ✅ Conclusão
 
