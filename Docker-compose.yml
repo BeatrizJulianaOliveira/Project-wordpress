@@ -5,9 +5,9 @@ services:
     ports:
       - "80:80"
     environment:
-      WORDPRESS_DB_HOST: db-wordpress.c1oigkqq4mak.us-east-1.rds.amazonaws.com
-      WORDPRESS_DB_USER: beatriz
-      WORDPRESS_DB_PASSWORD: 06082004
+      WORDPRESS_DB_HOST: database-1.c1oigkqq4mak.us-east-1.rds.amazonaws.com
+      WORDPRESS_DB_USER: juliana
+      WORDPRESS_DB_PASSWORD: 996870300
       WORDPRESS_DB_NAME: db_wordpress
     volumes:
       - /wordpress:/var/www/html
