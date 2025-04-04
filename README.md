@@ -365,11 +365,117 @@ Agora vamos criar um **Classic Load Balancer (CLB)**, que será responsável por
 
 
 
-4. Clique em **Criar** para finalizar a configuração.
+- Clique em **Criar** para finalizar a configuração.
 
 > ✅ **Pronto!** O CLB será criado e já estará pronto para ser utilizado.
 
 ---
+
+# 9. Criar o ASG (Auto Scaling Group) com o CLB
+
+O Auto Scaling Group (ASG) é responsável por criar automaticamente novas instâncias do servidor Web, garantindo que a aplicação esteja sempre disponível, mesmo com aumento ou diminuição do tráfego.
+
+### Passos:
+
+- Acesse o serviço **EC2** no painel da AWS.
+- No menu lateral, clique em **Auto Scaling Groups** e depois em **Criar Auto Scaling Group**.
+### Configuração inicial:
+
+- **Nome:** defina um nome claro e identificável para o ASG.
+- **Template de lançamento:** selecione o **Launch Template** criado anteriormente.
+
+![infra](Images/ASG.png)
+
+- Selecione a VPC criada anteriormente.
+- **Sub-redes:** escolha **duas ou mais sub-redes públicas**, preferencialmente de **Zonas de Disponibilidade diferentes**.
+- Clique em próximo.
+
+![infra](Images/ASG%201.png)
+
+### Integração com Load Balancer:
+
+- Escolha o **Classic Load Balancer (CLB)** criado anteriormente.
+- Isso garante que o tráfego de entrada será automaticamente distribuído entre as instâncias gerenciadas pelo ASG.
+
+![infra](Images/ASG%202.png)
+
+- Vá até "Verificação de Integridade" e marque a opção ilustrada na imagem. Clique em próximo
+
+![infra](Images/ASG%203.png)
+
+- Na etapa 4, selecione as opções ilustradas na imagem.
+
+![infra](Images/ASG%204.png)
+
+### Monitoramento:
+
+- **Ative o monitoramento detalhado com o CloudWatch**.
+  > Isso permite acompanhar o desempenho das instâncias e ajustar a escala automaticamente se necessário.
+
+![infra](Images/ASG%205.png)
+
+### Tags:
+
+- Adicione uma **tag personalizada** para facilitar a identificação das instâncias criadas pelo ASG.
+  - Por exemplo:  
+    - **Key:** `Name`  
+    - **Value:** `EC2`
+
+![infra](Images/ASG%206.png)
+
+---
+# 10. Testando a Aplicação
+
+Agora que todos os serviços foram configurados corretamente, é hora de testar se tudo está funcionando como esperado.
+
+### Verificar as instâncias:
+
+- Acesse o painel **EC2**.
+- No menu lateral, clique em **Instâncias**.
+- Verifique a coluna **Verificação de status**:
+   - As instâncias devem estar com **duas bolinhas verdes** (1/2 ou 2/2).
+   - Isso indica que o sistema e a rede foram verificados com sucesso.
+
+![infra](Images/instancias.png)
+
+> ⚠️ Caso alguma instância esteja com erro, aguarde alguns minutos ou revise as configurações do Launch Template, do Auto Scaling Group e dos Grupos de Segurança.
+
+### Acessar o site via navegador:
+
+1. Acesse o serviço **EC2** > **Load Balancers**.
+2. Localize o **Classic Load Balancer** (CLB) que foi criado.
+3. Copie o **DNS Name** (ex: `my-clb-123456.us-east-1.elb.amazonaws.com`).
+4. Cole esse endereço no seu navegador.
+
+![infra](Images/LB.png)
+
+Se tudo estiver correto, a aplicação **WordPress** (ou a página do seu projeto) será carregada
+
+![alt text](Images/wordpress.png)
+
+# ✅ Conclusão
+
+Com todos os serviços devidamente configurados e integrados na AWS, conseguimos atingir com sucesso o objetivo principal deste projeto: **provisionar uma infraestrutura escalável e funcional para execução do WordPress em ambiente cloud**.
+
+Todos os recursos foram testados e validados, incluindo:
+
+- **Instâncias EC2** rodando corretamente;
+- **Banco de Dados RDS** acessível pela aplicação;
+- **Sistema de arquivos EFS** conectado com sucesso;
+- **Load Balancer** distribuindo o tráfego;
+- **Auto Scaling Group (ASG)** garantindo escalabilidade automática.
+
+Além disso, utilizamos tecnologias fundamentais como:
+
+- **Docker** para empacotamento e execução da aplicação;
+- **GitHub** para versionamento e organização do projeto;
+- **AWS** como plataforma completa de infraestrutura em nuvem.
+
+> ✅ O ambiente está pronto, funcional e preparado para futuras adaptações ou escalonamentos.
+
+![alt text](Images/wordpress%201.png)
+![alt text](Images/wordpress%202.png)
+
 
 
 
