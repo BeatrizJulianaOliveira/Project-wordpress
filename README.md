@@ -179,10 +179,13 @@ networks:
 ![template](images/template%205.png)
 - Clique em Auto Scaling e vamos criá-lo.
 ![asg](images/asg.png)
-- Insira o nome do seu Auto Scaling
+- Insira o nome do seu Auto Scaling e escolha o modelo de execução criado anteriomente 
 ![asg](images/asg%201.png)
--Escolha as subnets que serão responsaveis pelo servidor web
+
+- Selecione a última versão e clique em **Próximo**
 ![asg](images/asg%202.png)
+
+- Escolha as subnets que serão responsaveis pelo servidor web
 ### 9.Criar o ASG com o ALB 
 Colocar um nome && ecolher o launch template que criamos anteriormente
 Escolher as subnetes publicas de zonas diferentes para o LT
