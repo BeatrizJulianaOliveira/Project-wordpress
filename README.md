@@ -191,15 +191,15 @@ Nesta etapa, vamos configurar o serviço de banco de dados da AWS que será util
 
 ### Passos:
 
-1. Acesse o serviço **RDS** no painel da AWS.
-2. Clique em **Criar banco de dados**.
-3. Em tipo de criação, escolha **Padrão**.
-4. Em mecanismo do banco de dados, selecione **MySQL**.
+- Acesse o serviço **RDS** no painel da AWS.
+- Clique em **Criar banco de dados**.
+- Em tipo de criação, escolha **Padrão**.
+- Em mecanismo do banco de dados, selecione **MySQL**.
 
 ![infra](Images/rds.png) 
 
-5. Escolha a **versão mais recente** disponível.
-6. Em camada gratuita, selecione a opção **Elegível ao nível gratuito**.
+- Escolha a **versão mais recente** disponível.
+- Em camada gratuita, selecione a opção **Elegível ao nível gratuito**.
 ![infra](Images/rds%201.png)
 ### Configurações principais: Guarde essas informações.
 - **Nome de usuário principal:** defina um nome fácil de lembrar.  
@@ -237,6 +237,143 @@ Antes de finalizar a criação:
 A criação do RDS pode **demorar alguns minutos**. Você pode acompanhar o status na seção "Bancos de dados" do RDS.
 
 ![infra](Images/rds%208.png)
+
+## 5. Pegue e armazene o endereço do banco de dados e do ponto de montagem EFS.
+
+- RDS
+![infra](Images/rds%209.png)
+
+- EFS
+![infra](Images/rds%2010.png)
+![infra](Images/rds%2011.png)
+
+## 6. Altere o script deste documento, userdata e docker-compose.yml para que contenha suas informações.
+
+- User-data
+```
+#!/bin/bash
+
+sudo yum update -y
+sudo yum install -y docker wget amazon-efs-utils
+
+sudo service docker start
+sudo systemctl enable docker.service
+sudo usermod -aG docker ec2-user
+
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+sudo mkdir -p /wordpress
+sudo mount -t efs -o tls fs-01a854ff3d8732353:/ /wordpress
+
+wget -O /home/ec2-user/docker-compose.yml https://raw.githubusercontent.com/BeatrizJulianaOliveira/Project-wordpress/refs/heads/main/Docker-compose.yml 
+sudo chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
+
+cd /home/ec2-user
+sudo docker-compose up -d
+```
+- Docker-compose.yml
+```
+services:
+  web:
+    image: wordpress
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: rds.c1oigkqq4mak.us-east-1.rds.amazonaws.com 
+      WORDPRESS_DB_USER: seu-user
+      WORDPRESS_DB_PASSWORD: sua-password
+      WORDPRESS_DB_NAME: db_wordpress
+    volumes:
+      - /wordpress:/var/www/html
+```
+# 7. Criar um Modelo de Execução (Launch Template)
+
+Nesta etapa, vamos criar um modelo de execução que será utilizado para iniciar instâncias EC2 automaticamente com as configurações necessárias.
+
+### Passos:
+
+- Acesse o serviço **EC2** e clique em **Modelos de execução (Launch Templates)**.
+- Clique em **Criar modelo de execução**.
+- Escolha um nome para deu Template, uma descrição e ative a opção para fornecer orientação de ajuda para uso do Auto Scaaling
+
+![infra](Images/template.png)
+
+- **Imagem (AMI):** selecione o sistema **Amazon Linux** (esse passo é importante, pois o script do *User Data* foi feito para essa imagem).
+
+![infra](Images/template%201.png)
+
+### Configurações principais:
+
+- **Tipo de instância:** mantenha a configuração padrão ou escolha uma adequada ao projeto.
+- **Par de chaves (Key Pair):** selecione uma existente ou crie uma nova, se necessário.
+- **Sub-rede:** **não selecione nenhuma sub-rede específica** (o Auto Scaling definirá isso automaticamente).
+
+![infra](Images/template%202.png)
+
+- **Grupo de segurança:** selecione o **grupo de segurança do WebServer** (aquele criado para o servidor que rodará o WordPress).
+
+![infra](Images/template%203.png)
+
+### Avançado:
+
+- **Tags de recurso:** adicionei as tags fornecidas pelo programa de bolsas.
+- Role para baixo, em **Detalhes avançados** e **Dados do Usuário:**, insira o conteúdo do script no campo *User data* (ele será executado automaticamente na criação da instância).
+- Clique em Criar modelo.
+
+> ⚠️ **Importante:**  
+> No script do *User Data*, você deve **editar o ponto de montagem** para corresponder ao ID do seu **sistema de arquivos EFS**.  
+> Exemplo: substitua o valor `fs-xxxxxxxx:/` pelo valor real do seu EFS, como `fs-08887fa7af31be953:/`.
+
+![infra](Images/template%204.png)
+
+---
+
+# 8. Criar um CLB (Classic Load Balancer)
+
+Agora vamos criar um **Classic Load Balancer (CLB)**, que será responsável por distribuir o tráfego de acesso entre os servidores que vão rodar nossa aplicação.
+
+### Passos:
+
+-  Acesse o serviço **EC2** no painel da AWS.
+-  No menu lateral, clique em **Load Balancers** e depois em **Criar Load Balancer**.
+
+![infra](Images/CLB.png)
+![infra](Images/CLB%201.png)
+
+-  Selecione a opção **Classic Load Balancer (CLB)**.
+   > 💡 Note que essa opção aparece em um menu adicional separado das outras.
+
+### Configurações iniciais:
+- **Nome:** escolha um nome descritivo para o Load Balancer.
+
+![infra](Images/CLB%202.png)
+
+- **VPC:** certifique-se de que está selecionando a VPC correta.
+- **Sub-redes:** selecione as **sub-redes públicas** onde estão (ou estarão) os servidores Web.
+- **Grupos de segurança:** selecione o grupo de segurança do CLB criado anteriormente.
+![infra](Images/CLB%203.png)
+![infra](Images/CLB%204.png)
+
+### Verificação de Integridade (Health Check):
+
+- Por padrão, a checagem de integridade usa o caminho **`/index.html`**.
+- Altere esse caminho, se necessário, para o endpoint correto da sua aplicação (como `/` ou `/health`), dependendo do comportamento do seu servidor web.
+
+![infra](Images/CLB%205.png)
+
+
+
+4. Clique em **Criar** para finalizar a configuração.
+
+> ✅ **Pronto!** O CLB será criado e já estará pronto para ser utilizado.
+
+---
+
+
+
+
 
 
 
