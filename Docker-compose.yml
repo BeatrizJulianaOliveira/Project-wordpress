@@ -6,8 +6,8 @@ services:
       - "80:80"
     environment:
       WORDPRESS_DB_HOST: rds.c1oigkqq4mak.us-east-1.rds.amazonaws.com 
-      WORDPRESS_DB_USER: seu-user
-      WORDPRESS_DB_PASSWORD: sua-password
+      WORDPRESS_DB_USER: juliana
+      WORDPRESS_DB_PASSWORD: 996870300
       WORDPRESS_DB_NAME: db_wordpress
     volumes:
       - /wordpress:/var/www/html
